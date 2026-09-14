@@ -315,31 +315,47 @@ for im = 1:numim
         
         % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV) or 0-100 (CIELab)
             if cs == 1 % SHINE_color: HSV
+                % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
+                % converts channel3_mod out of SHINE's internal 0-255
+                % representation -- channel3{im} (original) is always 0-255,
+                % so both operands must still be 0-255 here for RMSE/SSIM to
+                % compare like with like (bug fix: computing this after
+                % scale2lum compared 0-255 against HSV's native 0-1 range,
+                % see repair report)
+                rmsqe = getRMSE(channel3{im},channel3_mod{im});
+                rmsqe_all = rmsqe_all+rmsqe;
+                mssim = ssim_index(channel3{im},channel3_mod{im});
+                mssim_all = mssim_all+mssim;
+
+                % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV)
                 channel3_mod{im} = scale2lum(channel3_mod{im}, cs); % SHINE_color: channel created on readImages.m
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1{im}, channel2{im}, channel3_mod{im});
                 % SHINE_color: transform HSV or CIELab to RGB and create label
                 color_im = hsv2rgb(color_im);
                 cs_tag = 'hsv_';
-                % SHINE_color: calculate rmse and ssim
-                rmsqe = getRMSE(channel3{im},channel3_mod{im});
-                rmsqe_all = rmsqe_all+rmsqe;
-                mssim = ssim_index(channel3{im},channel3_mod{im});
-                mssim_all = mssim_all+mssim;
-                
+
             elseif cs == 2 % SHINE_color: CIELab
+                % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
+                % converts channel1_mod out of SHINE's internal 0-255
+                % representation -- channel1{im} (original) is always 0-255,
+                % so both operands must still be 0-255 here for RMSE/SSIM to
+                % compare like with like (bug fix: computing this after
+                % scale2lum compared 0-255 against CIELab's native 0-100
+                % range, see repair report)
+                rmsqe = getRMSE(channel1{im},channel1_mod{im});
+                rmsqe_all = rmsqe_all+rmsqe;
+                mssim = ssim_index(channel1{im},channel1_mod{im});
+                mssim_all = mssim_all+mssim;
+
+                % SHINE_color: rescale luminance channel from 0-255 to 0-100 (CIELab)
                 channel1_mod{im} = scale2lum(channel1_mod{im}, cs); % SHINE_color: channel created on readImages.m
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1_mod{im}, channel2{im}, channel3{im});
                  % SHINE_color: transform HSV or CIELab to RGB and create label
                 color_im = lab2rgb(color_im);
                 cs_tag = 'cielab_';
-                % SHINE_color: calculate rmse and ssim
-                rmsqe = getRMSE(channel1{im},channel1_mod{im});
-                rmsqe_all = rmsqe_all+rmsqe;
-                mssim = ssim_index(channel1{im},channel1_mod{im});
-                mssim_all = mssim_all+mssim;
-                
+
              elseif cs == 3 % SHINE_color: RGB
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1_mod{im}, channel2_mod{im}, channel3_mod{im});
