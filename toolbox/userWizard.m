@@ -23,7 +23,7 @@
 % ------------------------------------------------------------------------
 
 
-function [input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot] = userWizard(mode,background,wholeIm,optim)
+function [input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot,it] = userWizard(mode,background,wholeIm,optim)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: Wizard
 % Specify the image format and the input/output directories here if SHINE
@@ -38,6 +38,8 @@ frame_rate = 0; % SHINE_color: initialize framerate to 0
 quitmsg = 'SHINE_color was quit.'; % SHINE_color: quit std message
 cs = 0; % SHINE_color: colorspace to be used
 y_n_plot = 0; % SHINE_color: to plot manipulations or not
+it = 1; % SHINE_color: number of iterations (default = 1; overwritten below
+        % only when a combined mode is selected and the user is prompted)
 
 
 
@@ -206,6 +208,10 @@ if temp == 2
             
         it = input('# of iterations? ');
         if isempty(it) == 1
+           it = 1; % SHINE_color: now that `it` is actually returned (bug fix,
+                   % see repair report), it must be set here to match this
+                   % message -- otherwise `1:it` with it=[] would run zero
+                   % iterations instead of the advertised one.
            disp('Will run 1 iteration.')
         end
                 

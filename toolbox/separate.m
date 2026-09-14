@@ -58,8 +58,13 @@
 function [mask_fgr,mask_bgr,background] = separate(image,fig,background)
 
 if nargin < 3 || background > 255 || background < 0
-    background = image(find(max(imhist(image))));
-    %[~, background] = max(imhist(image));
+    % SHINE_color: find the modal (most frequent) intensity. imhist bin i
+    % holds the count for uint8 intensity i-1, so the mode is idx-1, not idx
+    % (bug fix: the previous `image(find(max(imhist(image))))` always
+    % evaluated to image(1), the top-left pixel, regardless of histogram
+    % shape -- see repair report).
+    [~, idx] = max(imhist(image));
+    background = idx - 1;
 end
 idx = image==background;
 image(idx) = 0;

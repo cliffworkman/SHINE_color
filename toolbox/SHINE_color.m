@@ -156,6 +156,24 @@
 % Kindly report any suggestions or corrections on the adaptations to
 % dalbenwork@gmail.com
 % ------------------------------------------------------------------------
+% SHINE_color toolbox, September 2026, version 0.0.6
+% maintained fork by Cliff Workman
+%
+% Bug fixes & validation:
+% - Fix operation chaining in combined modes 5-8;
+% - Fix propagation of user-selected iteration count;
+% - Fix iterative processing to operate on the previous iteration's output;
+% - Fix automatic background-intensity detection;
+% - Fix transformed-image return values;
+% - Fix RMSE/SSIM execution and HSV/CIELab scale consistency;
+% - Add MATLAB Image Processing Toolbox / GNU Octave image-package checks;
+% - Add warning for conflicting rescale.m path resolution;
+% - Add MATLAB/GNU Octave regression tests for repaired behaviors.
+%
+% This release preserves the published SHINE_color algorithms and mode
+% definitions. Changes are limited to restoring intended behavior,
+% dependency robustness, documentation, and regression coverage.
+% ------------------------------------------------------------------------
 
 
 function images = SHINE_color(inputpath, outputpath, extension, cs, im_vid, plots)
@@ -170,6 +188,54 @@ diary(fullfile(pwd,'SHINE_color_OUTPUT', 'command_window_log'))
 disp(' ')
 disp(['SHINE_color - Log created on ' char(datetime)])
 disp(' ')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SHINE_color: fail fast, with a clear message, if the image-processing
+% dependency this toolbox needs (rgb2lab/lab2rgb/imhist/mean2/std2/
+% fspecial/medfilt2, etc.) isn't available -- instead of crashing later
+% with a cryptic "undefined function" error deep inside readImages/
+% separate/lumMatch/lumCalc. This does not replace or reimplement any
+% Image Processing Toolbox / Octave image-package function; it only checks
+% for their presence. Under MATLAB this requires the Image Processing
+% Toolbox to be both installed and licensed; under GNU Octave it requires
+% the 'image' package (verified sufficient for this toolbox's needs).
+is_octave = (exist('OCTAVE_VERSION', 'builtin') ~= 0);
+if is_octave
+    try
+        pkg load image
+    catch
+        error('SHINE_color:MissingImagePackage', [...
+            'SHINE_color requires the Octave "image" package (for rgb2lab, ' ...
+            'imhist, medfilt2, fspecial, etc.), which could not be loaded. ' ...
+            'Install it with: pkg install -forge image']);
+    end
+else
+    has_ipt = ~isempty(ver('images')) && license('test','Image_Toolbox');
+    if ~has_ipt
+        error('SHINE_color:MissingImageToolbox', [...
+            'SHINE_color requires the MATLAB Image Processing Toolbox (for ' ...
+            'rgb2lab, imhist, medfilt2, fspecial, etc.), which does not ' ...
+            'appear to be installed/licensed on this system.']);
+    end
+end
+
+% SHINE_color: warn (do not error) if a DIFFERENT rescale.m earlier on the
+% path would shadow this toolbox's own rescale.m -- sfMatch.m/specMatch.m
+% depend on this toolbox's rescale(images,option) (cell-array input)
+% internally, so that is what must resolve first. Do NOT warn just because
+% MATLAB's built-in rescale() (numeric-array input, since R2017b) also
+% exists on the path -- both are expected to coexist; only a third
+% rescale.m resolving ahead of this one is an actual problem.
+expected_rescale = fullfile(fileparts(mfilename('fullpath')), 'rescale.m');
+resolved_rescale = which('rescale');
+if ~strcmpi(resolved_rescale, expected_rescale)
+    warning('SHINE_color:RescaleShadowed', [...
+        'A function named "rescale" other than this toolbox''s own %s ' ...
+        'is resolving first on the path (found: %s). sfMatch/specMatch ' ...
+        'depend on this toolbox''s own rescale(); if results look wrong, ' ...
+        'check for another rescale.m ahead of the SHINE_color toolbox ' ...
+        'folder on your path.'], expected_rescale, resolved_rescale);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: default values for call from command line
@@ -233,7 +299,7 @@ if nargin ~= 0
 % SHINE_color: wizard
 else
     
-[input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot] = userWizard(mode,background,wholeIm,optim);
+[input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot,it] = userWizard(mode,background,wholeIm,optim);
 
 % SHINE_color: store channel information as a function of colorspace
 [channel1, channel2, channel3, images, numim, imname] = readImages(input_folder,imformat,cs,im_vid); 
@@ -252,6 +318,18 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: perform transformations
+
+% SHINE_color: seed the working channels from the originals so iteration 1
+% starts from the source image set; each processImage call below then
+% overwrites its channelN_mod, so iteration 2+ consumes the PREVIOUS
+% iteration's result instead of recomputing from the original every time
+% (bug fix, see repair report). channel1/2/3 themselves stay untouched for
+% mask/background detection and for the post-loop original-vs-modified
+% diagnostics.
+channel1_mod = channel1;
+channel2_mod = channel2;
+channel3_mod = channel3;
+
 for iteration = 1:it
     if it > 1
         disp(' ')
@@ -261,21 +339,21 @@ for iteration = 1:it
         % SHINE_color: separate foreground from background
         [mask_fgr,mask_bgr,background] = maskFgrBgr(wholeIm,channel3,numim,background,template_folder,imformat,nargin);
         % SHINE_color: display info about transformations
-        it = displayInfo(mode,wholeIm,background,it); 
-        channel3_mod = processImage(channel3, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
+        it = displayInfo(mode,wholeIm,background,it);
+        channel3_mod = processImage(channel3_mod, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
     elseif cs == 2
         % SHINE_color: separate foreground from background
         [mask_fgr,mask_bgr,background] = maskFgrBgr(wholeIm,channel1,numim,background,template_folder,imformat,nargin);
         % SHINE_color: display info about transformations
         it = displayInfo(mode,wholeIm,background,it);
-        channel1_mod = processImage(channel1, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
+        channel1_mod = processImage(channel1_mod, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
     elseif cs == 3
-        channel1_mod = processImage(channel1, mode, wholeIm, [], [], optim, rescaling);
-        channel2_mod = processImage(channel2, mode, wholeIm, [], [], optim, rescaling);
-        channel3_mod = processImage(channel3, mode, wholeIm, [], [], optim, rescaling);
+        channel1_mod = processImage(channel1_mod, mode, wholeIm, [], [], optim, rescaling);
+        channel2_mod = processImage(channel2_mod, mode, wholeIm, [], [], optim, rescaling);
+        channel3_mod = processImage(channel3_mod, mode, wholeIm, [], [], optim, rescaling);
     end
-    
-    
+
+
     % SHINE_color: uncomment next line to save each iteration's result
     % to output folder
     %save(fullfile(output_folder,sprintf('SHINE_color_d_%d_it',iteration)),'images')
@@ -299,35 +377,60 @@ elseif cs == 3
 end
 
 for im = 1:numim
-    if nargout == 0
-        
+        % SHINE_color: reconstruction, RMSE/SSIM, and populating the return
+        % value `images` always run, regardless of nargout, so a caller that
+        % captures an output (e.g. `out = SHINE_color(...)`) gets the
+        % transformed images and correct diagnostics rather than empty cells
+        % and zeroed-out stats (bug fix, see repair report). Only the
+        % transformed-image file writing via imwrite below stays conditional
+        % on nargout==0, exactly preserving today's script-mode ("no
+        % captured output" -> write transformed image files) behavior. Other
+        % pre-existing filesystem side effects (the diary log, lumCalc's
+        % statistics, diagnostic plots) are unaffected by nargout and still
+        % run either way.
         % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV) or 0-100 (CIELab)
             if cs == 1 % SHINE_color: HSV
+                % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
+                % converts channel3_mod out of SHINE's internal 0-255
+                % representation -- channel3{im} (original) is always 0-255,
+                % so both operands must still be 0-255 here for RMSE/SSIM to
+                % compare like with like (bug fix: computing this after
+                % scale2lum compared 0-255 against HSV's native 0-1 range,
+                % see repair report)
+                rmsqe = getRMSE(channel3{im},channel3_mod{im});
+                rmsqe_all = rmsqe_all+rmsqe;
+                mssim = ssim_index(channel3{im},channel3_mod{im});
+                mssim_all = mssim_all+mssim;
+
+                % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV)
                 channel3_mod{im} = scale2lum(channel3_mod{im}, cs); % SHINE_color: channel created on readImages.m
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1{im}, channel2{im}, channel3_mod{im});
                 % SHINE_color: transform HSV or CIELab to RGB and create label
                 color_im = hsv2rgb(color_im);
                 cs_tag = 'hsv_';
-                % SHINE_color: calculate rmse and ssim
-                rmsqe = getRMSE(channel3{im},channel3_mod{im});
-                rmsqe_all = rmsqe_all+rmsqe;
-                mssim = ssim_index(channel3{im},channel3_mod{im});
-                mssim_all = mssim_all+mssim;
-                
+
             elseif cs == 2 % SHINE_color: CIELab
+                % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
+                % converts channel1_mod out of SHINE's internal 0-255
+                % representation -- channel1{im} (original) is always 0-255,
+                % so both operands must still be 0-255 here for RMSE/SSIM to
+                % compare like with like (bug fix: computing this after
+                % scale2lum compared 0-255 against CIELab's native 0-100
+                % range, see repair report)
+                rmsqe = getRMSE(channel1{im},channel1_mod{im});
+                rmsqe_all = rmsqe_all+rmsqe;
+                mssim = ssim_index(channel1{im},channel1_mod{im});
+                mssim_all = mssim_all+mssim;
+
+                % SHINE_color: rescale luminance channel from 0-255 to 0-100 (CIELab)
                 channel1_mod{im} = scale2lum(channel1_mod{im}, cs); % SHINE_color: channel created on readImages.m
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1_mod{im}, channel2{im}, channel3{im});
                  % SHINE_color: transform HSV or CIELab to RGB and create label
                 color_im = lab2rgb(color_im);
                 cs_tag = 'cielab_';
-                % SHINE_color: calculate rmse and ssim
-                rmsqe = getRMSE(channel1{im},channel1_mod{im});
-                rmsqe_all = rmsqe_all+rmsqe;
-                mssim = ssim_index(channel1{im},channel1_mod{im});
-                mssim_all = mssim_all+mssim;
-                
+
              elseif cs == 3 % SHINE_color: RGB
                 % SHINE_color: create a color image (from HSV, CIELab, or RGB)
                 color_im = cat(3, channel1_mod{im}, channel2_mod{im}, channel3_mod{im});
@@ -348,10 +451,20 @@ for im = 1:numim
                 mssim_b = ssim_index(channel3{im},channel3_mod{im});
                 mssim_all_b = mssim_all_b+mssim_b;              
             end
-            
-            % SHINE_color: writing the colorful image
-            imwrite(color_im,fullfile(output_folder,strcat('SHINE_color_',cs_tag, num2str(im),'.png'))); 
-    end  
+
+            % SHINE_color: store the reconstructed color image as this
+            % function's return value (bug fix, see repair report)
+            images{im} = color_im;
+
+            % SHINE_color: writing the colorful image -- transformed-image
+            % file writing via imwrite stays opt-in: only happens when the
+            % caller did not capture a return value, unchanged from the
+            % original script-mode behavior. This does not affect
+            % SHINE_color's other filesystem side effects (diary log,
+            % lumCalc statistics, diagnostic plots), which are unconditional.
+            if nargout == 0
+                imwrite(color_im,fullfile(output_folder,strcat('SHINE_color_',cs_tag, num2str(im),'.png')));
+            end
 end
 
 if cs == 1 || cs == 2

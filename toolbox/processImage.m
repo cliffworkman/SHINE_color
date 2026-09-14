@@ -25,7 +25,12 @@
 
 function [channel_mod] = processImage(channel, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling)
 
-channel_mod = [];
+% SHINE_color: channel_mod is the working accumulator threaded through every
+% stage of a combined mode, so stage 2 (and stage 3) operate on the previous
+% stage's output rather than re-reading the untouched input (bug fix, see
+% repair report). It is seeded with the original channel so single-operation
+% modes and each mode's genuine first stage still start from the source.
+channel_mod = channel;
 
     switch mode
         case 1
@@ -35,7 +40,7 @@ channel_mod = [];
                 channel_mod = lumMatch(channel,mask_fgr);
                 channel_mod = lumMatch(channel_mod,mask_bgr);
             end
-            disp('Progress: lumMatch successful')                
+            disp('Progress: lumMatch successful')
         case {2, 5, 6}
             if wholeIm == 1
                 channel_mod = histMatch(channel,optim);
@@ -47,18 +52,18 @@ channel_mod = [];
     end
     switch mode
         case {3, 5, 7}
-            channel_mod = sfMatch(channel,rescaling);
+            channel_mod = sfMatch(channel_mod,rescaling);
             disp('Progress: sfMatch successful')
         case {4, 6, 8}
-            channel_mod = specMatch(channel,rescaling); %channel mod or channel?
+            channel_mod = specMatch(channel_mod,rescaling);
             disp('Progress: specMatch successful')
     end
     switch mode
         case {7, 8}
             if wholeIm == 1
-                channel_mod = histMatch(channel,optim);
+                channel_mod = histMatch(channel_mod,optim);
             else
-                channel_mod = histMatch(channel,optim,[],mask_fgr);
+                channel_mod = histMatch(channel_mod,optim,[],mask_fgr);
                 channel_mod = histMatch(channel_mod,optim,[],mask_bgr);
             end
             disp('Progress: histMatch successful')
