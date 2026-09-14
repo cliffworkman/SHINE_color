@@ -252,6 +252,18 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: perform transformations
+
+% SHINE_color: seed the working channels from the originals so iteration 1
+% starts from the source image set; each processImage call below then
+% overwrites its channelN_mod, so iteration 2+ consumes the PREVIOUS
+% iteration's result instead of recomputing from the original every time
+% (bug fix, see repair report). channel1/2/3 themselves stay untouched for
+% mask/background detection and for the post-loop original-vs-modified
+% diagnostics.
+channel1_mod = channel1;
+channel2_mod = channel2;
+channel3_mod = channel3;
+
 for iteration = 1:it
     if it > 1
         disp(' ')
@@ -261,21 +273,21 @@ for iteration = 1:it
         % SHINE_color: separate foreground from background
         [mask_fgr,mask_bgr,background] = maskFgrBgr(wholeIm,channel3,numim,background,template_folder,imformat,nargin);
         % SHINE_color: display info about transformations
-        it = displayInfo(mode,wholeIm,background,it); 
-        channel3_mod = processImage(channel3, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
+        it = displayInfo(mode,wholeIm,background,it);
+        channel3_mod = processImage(channel3_mod, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
     elseif cs == 2
         % SHINE_color: separate foreground from background
         [mask_fgr,mask_bgr,background] = maskFgrBgr(wholeIm,channel1,numim,background,template_folder,imformat,nargin);
         % SHINE_color: display info about transformations
         it = displayInfo(mode,wholeIm,background,it);
-        channel1_mod = processImage(channel1, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
+        channel1_mod = processImage(channel1_mod, mode, wholeIm, mask_fgr, mask_bgr, optim, rescaling);
     elseif cs == 3
-        channel1_mod = processImage(channel1, mode, wholeIm, [], [], optim, rescaling);
-        channel2_mod = processImage(channel2, mode, wholeIm, [], [], optim, rescaling);
-        channel3_mod = processImage(channel3, mode, wholeIm, [], [], optim, rescaling);
+        channel1_mod = processImage(channel1_mod, mode, wholeIm, [], [], optim, rescaling);
+        channel2_mod = processImage(channel2_mod, mode, wholeIm, [], [], optim, rescaling);
+        channel3_mod = processImage(channel3_mod, mode, wholeIm, [], [], optim, rescaling);
     end
-    
-    
+
+
     % SHINE_color: uncomment next line to save each iteration's result
     % to output folder
     %save(fullfile(output_folder,sprintf('SHINE_color_d_%d_it',iteration)),'images')
