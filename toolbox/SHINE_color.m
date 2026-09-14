@@ -233,7 +233,7 @@ if nargin ~= 0
 % SHINE_color: wizard
 else
     
-[input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot] = userWizard(mode,background,wholeIm,optim);
+[input_folder,output_folder,template_folder,cs,imformat,im_vid,frame_rate,mode,background,wholeIm,optim,y_n_plot,it] = userWizard(mode,background,wholeIm,optim);
 
 % SHINE_color: store channel information as a function of colorspace
 [channel1, channel2, channel3, images, numim, imname] = readImages(input_folder,imformat,cs,im_vid); 
