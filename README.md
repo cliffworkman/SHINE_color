@@ -16,6 +16,8 @@ See release notes below. Please, send suggestions and doubts to <dalbenwork@gmai
 
 `SHINE_color` will now fail immediately with a clear message if this dependency isn't available, rather than partway through a run.
 
+**Path note:** `toolbox/rescale.m` is a SHINE_color-specific function (rescales a *cell* of images) that intentionally shares its name with MATLAB's built-in `rescale` (a different function, added in R2017b, that rescales a single numeric array). Once the `toolbox/` folder is on your path, `toolbox/rescale.m` is used by `sfMatch`/`specMatch` as intended; if you have another, unrelated `rescale.m` earlier on your path, `SHINE_color` now warns about it at startup.
+
 #### STEP-BY-STEP
 
 If you have no experience with MATLAB, just follow these steps (images available on the files tab of the [OSF project](https://osf.io/auzjy/)):

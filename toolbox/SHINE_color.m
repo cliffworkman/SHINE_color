@@ -201,6 +201,24 @@ else
     end
 end
 
+% SHINE_color: warn (do not error) if a DIFFERENT rescale.m earlier on the
+% path would shadow this toolbox's own rescale.m -- sfMatch.m/specMatch.m
+% depend on this toolbox's rescale(images,option) (cell-array input)
+% internally, so that is what must resolve first. Do NOT warn just because
+% MATLAB's built-in rescale() (numeric-array input, since R2017b) also
+% exists on the path -- both are expected to coexist; only a third
+% rescale.m resolving ahead of this one is an actual problem.
+expected_rescale = fullfile(fileparts(mfilename('fullpath')), 'rescale.m');
+resolved_rescale = which('rescale');
+if ~strcmpi(resolved_rescale, expected_rescale)
+    warning('SHINE_color:RescaleShadowed', [...
+        'A function named "rescale" other than this toolbox''s own %s ' ...
+        'is resolving first on the path (found: %s). sfMatch/specMatch ' ...
+        'depend on this toolbox''s own rescale(); if results look wrong, ' ...
+        'check for another rescale.m ahead of the SHINE_color toolbox ' ...
+        'folder on your path.'], expected_rescale, resolved_rescale);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: default values for call from command line
 % If desired, the default values can be changed here:
