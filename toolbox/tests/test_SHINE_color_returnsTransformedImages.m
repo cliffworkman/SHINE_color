@@ -1,9 +1,16 @@
 function test_SHINE_color_returnsTransformedImages()
 % Regression test for Bug D: a captured return value
-% (`out = SHINE_color(...)`) must contain the actual transformed images --
-% matching what script mode writes to disk -- not empty cells, and the
-% disk write must stay opt-in (skipped when the caller captures a return
-% value), unchanged from the original script-mode behavior.
+% (`out = SHINE_color(...)`) must contain the actual reconstructed
+% transformed images -- matching the transformed image files script mode
+% writes -- not empty cells. Writing of the transformed-image PNG files
+% (via imwrite, into the caller-supplied output folder) must stay opt-in:
+% suppressed specifically when the caller captures a return value,
+% unchanged from the original script-mode behavior. This test does not
+% check SHINE_color's other pre-existing filesystem side effects (the
+% diary log, lumCalc's statistics, diagnostic plots under
+% SHINE_color_OUTPUT), which remain unconditional and unaffected by
+% nargout -- narrowing this test's scope to the transformed-image PNGs
+% does not imply those other side effects are absent.
 %
 % cs=3 (RGB) is used deliberately: RGB reconstruction is a direct
 % cat(3, ...) of the modified channels with no HSV/CIELab rescale step, so
@@ -56,7 +63,7 @@ out = SHINE_color(input_folder, output_captured, 'png', 3, 0, 2); % nargout==1: 
 
 writtenWhenCaptured = dir(fullfile(output_captured, '*.png'));
 assert(isempty(writtenWhenCaptured), ...
-    'SHINE_color wrote output files even though its return value was captured (nargout>=1) -- disk write should stay opt-in');
+    'SHINE_color wrote transformed-image PNG files to the output folder even though its return value was captured (nargout>=1) -- transformed-image file writing should stay opt-in');
 
 assert(iscell(out) && numel(out) == 3, 'expected 3 returned images');
 

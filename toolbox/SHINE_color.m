@@ -364,9 +364,12 @@ for im = 1:numim
         % captures an output (e.g. `out = SHINE_color(...)`) gets the
         % transformed images and correct diagnostics rather than empty cells
         % and zeroed-out stats (bug fix, see repair report). Only the
-        % optional disk write below stays conditional on nargout==0, exactly
-        % preserving today's script-mode ("no captured output" -> write
-        % files) behavior.
+        % transformed-image file writing via imwrite below stays conditional
+        % on nargout==0, exactly preserving today's script-mode ("no
+        % captured output" -> write transformed image files) behavior. Other
+        % pre-existing filesystem side effects (the diary log, lumCalc's
+        % statistics, diagnostic plots) are unaffected by nargout and still
+        % run either way.
         % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV) or 0-100 (CIELab)
             if cs == 1 % SHINE_color: HSV
                 % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
@@ -435,9 +438,12 @@ for im = 1:numim
             % function's return value (bug fix, see repair report)
             images{im} = color_im;
 
-            % SHINE_color: writing the colorful image -- disk output stays
-            % opt-in: only happens when the caller did not capture a return
-            % value, unchanged from the original script-mode behavior
+            % SHINE_color: writing the colorful image -- transformed-image
+            % file writing via imwrite stays opt-in: only happens when the
+            % caller did not capture a return value, unchanged from the
+            % original script-mode behavior. This does not affect
+            % SHINE_color's other filesystem side effects (diary log,
+            % lumCalc statistics, diagnostic plots), which are unconditional.
             if nargout == 0
                 imwrite(color_im,fullfile(output_folder,strcat('SHINE_color_',cs_tag, num2str(im),'.png')));
             end
