@@ -311,8 +311,14 @@ elseif cs == 3
 end
 
 for im = 1:numim
-    if nargout == 0
-        
+        % SHINE_color: reconstruction, RMSE/SSIM, and populating the return
+        % value `images` always run, regardless of nargout, so a caller that
+        % captures an output (e.g. `out = SHINE_color(...)`) gets the
+        % transformed images and correct diagnostics rather than empty cells
+        % and zeroed-out stats (bug fix, see repair report). Only the
+        % optional disk write below stays conditional on nargout==0, exactly
+        % preserving today's script-mode ("no captured output" -> write
+        % files) behavior.
         % SHINE_color: rescale value channel from 0-255 to 0-1 (HSV) or 0-100 (CIELab)
             if cs == 1 % SHINE_color: HSV
                 % SHINE_color: calculate rmse and ssim BEFORE scale2lum below
@@ -376,10 +382,17 @@ for im = 1:numim
                 mssim_b = ssim_index(channel3{im},channel3_mod{im});
                 mssim_all_b = mssim_all_b+mssim_b;              
             end
-            
-            % SHINE_color: writing the colorful image
-            imwrite(color_im,fullfile(output_folder,strcat('SHINE_color_',cs_tag, num2str(im),'.png'))); 
-    end  
+
+            % SHINE_color: store the reconstructed color image as this
+            % function's return value (bug fix, see repair report)
+            images{im} = color_im;
+
+            % SHINE_color: writing the colorful image -- disk output stays
+            % opt-in: only happens when the caller did not capture a return
+            % value, unchanged from the original script-mode behavior
+            if nargout == 0
+                imwrite(color_im,fullfile(output_folder,strcat('SHINE_color_',cs_tag, num2str(im),'.png')));
+            end
 end
 
 if cs == 1 || cs == 2
