@@ -8,6 +8,14 @@ See release notes below. Please, send suggestions and doubts to <dalbenwork@gmai
 
 `SHINE` documentation (see a [manual here](http://www.mapageweb.umontreal.ca/gosselif/shine/SHINEmanual.pdf)) extends to `SHINE_color`. See a step-by-step on how to use `SHINE_color` following.
 
+#### REQUIREMENTS
+
+`SHINE_color` requires either:
+- **MATLAB** with the **Image Processing Toolbox** (used for `rgb2lab`, `lab2rgb`, `imhist`, `mean2`, `std2`, `fspecial`, and `medfilt2`), or
+- **GNU Octave** with the **`image`** package (`pkg install -forge image` if not already installed; `SHINE_color` loads it automatically). Octave support is a secondary compatibility property, not the primary target: MATLAB remains the reference environment for exact numerical behavior, and small MATLAB-vs-Octave differences (e.g. in color-space conversion) are expected and not bugs. One known gap: `SHINE_color`'s Command Window log header uses MATLAB's `datetime`, which under Octave requires the separate `datatypes` package (`pkg install -forge datatypes`) to be installed and loaded.
+
+`SHINE_color` will now fail immediately with a clear message if this dependency isn't available, rather than partway through a run.
+
 #### STEP-BY-STEP
 
 If you have no experience with MATLAB, just follow these steps (images available on the files tab of the [OSF project](https://osf.io/auzjy/)):

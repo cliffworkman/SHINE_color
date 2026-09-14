@@ -172,6 +172,36 @@ disp(['SHINE_color - Log created on ' char(datetime)])
 disp(' ')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SHINE_color: fail fast, with a clear message, if the image-processing
+% dependency this toolbox needs (rgb2lab/lab2rgb/imhist/mean2/std2/
+% fspecial/medfilt2, etc.) isn't available -- instead of crashing later
+% with a cryptic "undefined function" error deep inside readImages/
+% separate/lumMatch/lumCalc. This does not replace or reimplement any
+% Image Processing Toolbox / Octave image-package function; it only checks
+% for their presence. Under MATLAB this requires the Image Processing
+% Toolbox to be both installed and licensed; under GNU Octave it requires
+% the 'image' package (verified sufficient for this toolbox's needs).
+is_octave = (exist('OCTAVE_VERSION', 'builtin') ~= 0);
+if is_octave
+    try
+        pkg load image
+    catch
+        error('SHINE_color:MissingImagePackage', [...
+            'SHINE_color requires the Octave "image" package (for rgb2lab, ' ...
+            'imhist, medfilt2, fspecial, etc.), which could not be loaded. ' ...
+            'Install it with: pkg install -forge image']);
+    end
+else
+    has_ipt = ~isempty(ver('images')) && license('test','Image_Toolbox');
+    if ~has_ipt
+        error('SHINE_color:MissingImageToolbox', [...
+            'SHINE_color requires the MATLAB Image Processing Toolbox (for ' ...
+            'rgb2lab, imhist, medfilt2, fspecial, etc.), which does not ' ...
+            'appear to be installed/licensed on this system.']);
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SHINE_color: default values for call from command line
 % If desired, the default values can be changed here:
 
