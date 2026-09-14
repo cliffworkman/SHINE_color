@@ -32,6 +32,12 @@ If you have no experience with MATLAB, just follow these steps (images available
 
 Please note that `SHINE_color` does not read transparent (alpha) channels from .PNG images. If you want to display images with transparent background on your experiment, upload them to `SHINE_color`, perform manipulations on background and foreground separately, then remove the background on an image manipulation software (e.g., GIMP, Photoshop). 
 
+#### MODES, ITERATIONS & RETURN VALUES
+
+- **Modes 5-8** (the combined modes: `histMatch & sfMatch`, `histMatch & specMatch`, `sfMatch & histMatch`, `specMatch & histMatch` -- mode 8 is the default) genuinely apply their first operation, then apply their second operation to that result.
+- **Iterations**: the "# of iterations?" prompt (available for the combined modes) is honored -- iteration *N* is applied to iteration *N-1*'s result, not recomputed from the original images each time.
+- **Return value**: `SHINE_color` can be used either as a script (no output captured -- e.g. typing `SHINE_color`) or as a function (`out = SHINE_color(inputpath,outputpath,extension,cs,im_vid,plots)`). In script mode, transformed images and diagnostics (RMSE/SSIM, `img_stats_pre_post.txt`) are written to `SHINE_color_OUTPUT` as before. When a return value is captured, `out` contains the actual transformed images (matching what script mode would have written) and no files are written to disk -- pick whichever calling style suits your workflow, but note that command-line calls only expose `inputpath`, `outputpath`, `extension`, `cs`, `im_vid`, and `plots`; matching mode, region, background, SSIM optimization, and iteration count remain fixed at their script defaults (mode 8, whole image, automatic background, no SSIM optimization, 1 iteration) unless you go through the interactive wizard.
+
 ***
 
 References    
