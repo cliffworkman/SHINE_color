@@ -156,6 +156,24 @@
 % Kindly report any suggestions or corrections on the adaptations to
 % dalbenwork@gmail.com
 % ------------------------------------------------------------------------
+% SHINE_color toolbox, September 2026, version 0.0.6
+% maintained fork by Cliff Workman
+%
+% Bug fixes & validation:
+% - Fix operation chaining in combined modes 5-8;
+% - Fix propagation of user-selected iteration count;
+% - Fix iterative processing to operate on the previous iteration's output;
+% - Fix automatic background-intensity detection;
+% - Fix transformed-image return values;
+% - Fix RMSE/SSIM execution and HSV/CIELab scale consistency;
+% - Add MATLAB Image Processing Toolbox / GNU Octave image-package checks;
+% - Add warning for conflicting rescale.m path resolution;
+% - Add MATLAB/GNU Octave regression tests for repaired behaviors.
+%
+% This release preserves the published SHINE_color algorithms and mode
+% definitions. Changes are limited to restoring intended behavior,
+% dependency robustness, documentation, and regression coverage.
+% ------------------------------------------------------------------------
 
 
 function images = SHINE_color(inputpath, outputpath, extension, cs, im_vid, plots)

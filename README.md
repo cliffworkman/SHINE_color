@@ -6,6 +6,8 @@ See release notes below. Please, send suggestions and doubts to <dalbenwork@gmai
 
 `SHINE_color` was adapted from the `SHINE` toolbox and allows the control of low-level properties of colorful images. It does so by either manipulating RGB channels directly or by converting RGB into HSV or CIELab color space, extracting the luminance channel, applying `SHINE` controls, and concatenating it with the other channels (i.e., Hue, Saturation) to create a colorful image with controlled luminance.
 
+> **This is a maintained fork** of the published [SHINE_color toolbox](https://github.com/RodDalBen/SHINE_color) (Dal Ben, 2021, adapted from Willenbockel et al., 2010; see the citation below). It preserves the original methods and workflow. Version 0.0.6 repairs a set of implementation defects identified in version 0.0.5, restoring behavior that the published documentation clearly intended but that the code did not consistently produce. These fixes are intentionally narrow: the goal is to restore documented/intended behavior, not to redesign the image-normalization algorithms, mode definitions, or processing order. A regression test suite was added alongside the fixes to make the repaired behaviors explicit and guard against silent regressions. See the version 0.0.6 entry in the update history below for details.
+
 `SHINE` documentation (see a [manual here](http://www.mapageweb.umontreal.ca/gosselif/shine/SHINEmanual.pdf)) extends to `SHINE_color`. See a step-by-step on how to use `SHINE_color` following.
 
 #### REQUIREMENTS
@@ -45,6 +47,29 @@ Dal Ben, R. (2023). SHINE_color: controlling low-level properties of colorful im
 
 Willenbockel, V., Sadr, J., Fiset, D., Horne, G. O., Gosselin, F., & Tanaka, J. W. (2010). Controlling low-level image properties: The SHINE toolbox. Behavior Research Methods, 42(3), 671–684. http://doi.org/10.3758/BRM.42.3.671    
 SHINE toolbox is available at: http://www.mapageweb.umontreal.ca/gosselif/SHINE/
+
+***
+
+Update, September 2026, version 0.0.6
+
+Bug-fix and validation release. This maintained-fork release repairs implementation defects identified in version 0.0.5, without changing the published SHINE_color algorithms, mode definitions, or processing order.
+
+Repairs:
+- Fix combined processing modes 5-8 so the second operation consumes the first operation's result rather than independently reprocessing the original channel;
+- Fix propagation of the user-selected iteration count from the interactive wizard;
+- Fix iterative processing so iteration N consumes iteration N-1's output rather than repeatedly reprocessing the source;
+- Fix automatic foreground/background separation so automatic background intensity is based on the modal image intensity rather than the upper-left pixel;
+- Fix captured function output so `SHINE_color(...)` returns reconstructed transformed images rather than empty cells;
+- Fix RMSE/SSIM calculation when a function return value is captured;
+- Fix HSV and CIELab RMSE/SSIM comparisons so both operands use the same SHINE internal 0-255 scale;
+- Add MATLAB Image Processing Toolbox / GNU Octave `image` package dependency checks;
+- Add a targeted warning for conflicting `rescale.m` path resolution;
+- Add the MATLAB/GNU Octave-compatible regression suite;
+- Document current command-line limitations, iteration behavior, return-value behavior, and Octave compatibility.
+
+Validation: all six regression test groups passed repeatedly under GNU Octave 11.1.0 on the repaired implementation, and those same six groups failed when exercised against a scratch copy restored to the corresponding pre-fix behavior. MATLAB R2024a was installed on the validation machine, but automated test execution could not be completed because the license server was unreachable (License Manager Error -15); exact MATLAB/Octave numerical equivalence has not been independently confirmed.
+
+No SHINE_color image-normalization algorithms, processing-mode definitions, or published operation ordering were intentionally changed in version 0.0.6. This release is intended to restore the behavior of the published implementation where the code contradicted its stated intent.
 
 ***
 
