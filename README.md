@@ -169,3 +169,21 @@ The new version of the `SHINE_color` now handles video files. If a video file is
 
 ***
 
+
+## Built with AI assistance
+
+Maintenance and repair of this fork were carried out with substantial
+AI-coding assistance from OpenAI Codex. Codex helped inspect the historical
+implementation, identify and repair defects, construct regression tests,
+run comparative validation, and document the resulting behavior.
+
+Cliff Workman directed and reviewed the work. AI-generated code and analysis
+were treated as candidate contributions, with scientific and numerical claims
+independently checked against the original toolbox, executable GNU Octave
+reference behavior, regression tests, and published examples where available.
+Model output was not accepted as authoritative because Codex proposed it.
+
+This assistance concerns Cliff Workman's later maintenance and repair work.
+Original SHINE_color and SHINE authorship, and authorship of Dal Ben (2023),
+remain separate and unchanged; Codex is not an original author, scientific
+decision-maker, independent maintainer, or copyright holder.

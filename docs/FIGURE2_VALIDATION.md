@@ -56,3 +56,12 @@ establish how the cat2 label arose.
 The committed comparison figure contains histograms and statistics only. It
 contains no source photograph pixels. The companion Python repository holds the
 full machine-readable audit and provenance discussion.
+
+## AI-development provenance
+
+OpenAI Codex was used extensively as a coding and analysis assistant during
+Cliff Workman's human-directed and reviewed maintenance, repair, testing, and
+documentation of this fork. Scientific and numerical claims were independently
+checked through the documented regression and comparative validation procedures.
+This records later development assistance, not authorship of the original
+SHINE_color toolbox or publication. The README contains the primary disclosure.
