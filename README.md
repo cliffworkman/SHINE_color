@@ -71,6 +71,48 @@ Validation: all six regression test groups passed repeatedly under GNU Octave 11
 
 No SHINE_color image-normalization algorithms, processing-mode definitions, or published operation ordering were intentionally changed in version 0.0.6. This release is intended to restore the behavior of the published implementation where the code contradicted its stated intent.
 
+## Validation against the published Figure 2 example
+
+The repaired fork was checked against the three sample files distributed with
+SHINE_color and used for the published Figure 2 HSV histogram-matching example.
+Their exact file identities were recorded by SHA-256. In HSV mode 2, with one
+iteration and one three-image group, historical SHINE_color 0.0.5 and repaired
+0.0.6 produce the same histogram-matching behavior when supplied identical
+decoded RGB pixels. The common-input comparison also matches SHINE_color_py:
+pre-match histograms, the target histogram, matched histograms and sorted
+matched working-V values are identical in the recorded audit. The 0.0.6
+follow-up rechecked archived Octave results; it did not run a fresh comparison.
+The Pillow-common path reproduces Figure 2's displayed post-match values,
+M = 126.69 and SD = 74.77. JPEG decoder differences can change
+the decoded pixels and therefore shift summary statistics before processing.
+
+![Figure 2 validation comparison](docs/assets/figure2_validation_comparison.png)
+
+| Image | Figure 2 baseline | Supplied source | Post-match |
+| --- | --- | --- | --- |
+| cat1 | 172.47 / 44.72 | 172.48 / 44.73 | 126.69 / 74.77 |
+| cat2 | 80.34 / 127.26 | 80.34 / 68.07 | 126.69 / 74.77 |
+| cat3 | 127.26 / 76.76 | 127.26 / 76.76 | 126.69 / 74.77 |
+
+Values are mean / sample SD of working HSV V on the 0–255 scale. Source values
+are Pillow-decoded and rounded to two decimals; the post-match column uses the
+Pillow-common decoded path. Exact common-input histogram parity
+is the software comparison contract. One printed baseline statistic does not
+reproduce from the distributed sample image: Figure 2 reports cat2 as
+M = 80.34, SD = 127.26. The supplied image reproduces the mean but not that SD,
+and 127.26 is outside the attainable SD range for values bounded to 0–255 at
+that mean. The origin of this apparent annotation/reporting discrepancy is
+unknown, so the value is reported transparently rather than used as a software
+golden. Cat1 differs from the displayed values by approximately 0.01; its
+calculated values correspond to the printed values if truncated to two decimals,
+a plausible formatting explanation rather than an established convention.
+JPEG-decoder differences also affect decoded pixels: the Octave-common path
+rounds to post M = 126.70, SD = 74.78. These display-level
+differences do not affect the common-input algorithmic comparison.
+
+See the [detailed Figure 2 validation note](docs/FIGURE2_VALIDATION.md) for
+source hashes, decoder separation and comparison scope.
+
 ***
 
 Update, April 2023, version 0.0.5
@@ -127,3 +169,21 @@ The new version of the `SHINE_color` now handles video files. If a video file is
 
 ***
 
+
+## Built with AI assistance
+
+Maintenance and repair of this fork were carried out with substantial
+AI-coding assistance from OpenAI Codex. Codex helped inspect the historical
+implementation, identify and repair defects, construct regression tests,
+run comparative validation, and document the resulting behavior.
+
+Cliff Workman directed and reviewed the work. AI-generated code and analysis
+were treated as candidate contributions, with scientific and numerical claims
+independently checked against the original toolbox, executable GNU Octave
+reference behavior, regression tests, and published examples where available.
+Model output was not accepted as authoritative because Codex proposed it.
+
+This assistance concerns Cliff Workman's later maintenance and repair work.
+Original SHINE_color and SHINE authorship, and authorship of Dal Ben (2023),
+remain separate and unchanged; Codex is not an original author, scientific
+decision-maker, independent maintainer, or copyright holder.
